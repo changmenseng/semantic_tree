@@ -1,0 +1,573 @@
+{
+    "seed": 0,
+    "save_dir": "saved/sst2/phrase/bert_scm",
+    "data": {
+        "tokenizer_path": "bert-base-uncased",
+        "shared_kwargs": {
+            "max_length": 1024,
+            "num_workers": 8,
+            "add_special_tokens": true,
+            "labels": [
+                "N",
+                "P",
+                "D",
+                "I",
+                "+",
+                "-",
+                "O"
+            ],
+            "sent_labels": [
+                "N",
+                "P",
+                "O"
+            ],
+            "word_labels": [
+                "N",
+                "P",
+                "D",
+                "I",
+                "+",
+                "-",
+                "O"
+            ],
+            "doc_labels": [
+                "N",
+                "P"
+            ],
+            "unlabel_word_possible_labels": [
+                "N",
+                "P",
+                "O"
+            ],
+            "cnf_direction": "left",
+            "special_token_label": "O"
+        },
+        "train": {
+            "sent_fnames": ["resources/dataset/sst2/phrase/train_sents.parse.txt"],
+            "label_fnames": ["resources/dataset/sst2/phrase/train_labels.txt"],
+            "batch_size": 16
+        },
+        "val": {
+            "sent_fnames": ["resources/dataset/sst2/dev_sents.parse.txt"],
+            "label_fnames": ["resources/dataset/sst2/dev_labels.txt"],
+            "batch_size": 64
+        },
+        "test": [
+            {
+                "sent_fnames": ["resources/dataset/sst2/test_sents.parse.txt"],
+                "label_fnames": ["resources/dataset/sst2/test_labels.txt"],
+                "batch_size": 64
+            }
+        ],
+        "cfg": {
+            "nodes": [
+                "N",
+                "P",
+                "D",
+                "I",
+                "+",
+                "-",
+                "O",
+                "N+",
+                "N-",
+                "P+",
+                "P-"
+            ],
+            "roots": [
+                "N",
+                "P",
+                "O"
+            ],
+            "prenodes": [
+                "N",
+                "P",
+                "D",
+                "I",
+                "+",
+                "-",
+                "O"
+            ],
+            "posnodes": [
+                "N",
+                "P",
+                "D",
+                "I",
+                "+",
+                "-",
+                "O"
+            ],
+            "rules": [
+                "N -> N N",
+                "N -> O N",
+                "N -> N O",
+                "N -> D P",
+                "N -> P D",
+                "N -> N+ P",
+                "N -> P N+",
+                "N -> N P-",
+                "N -> P- N",
+                "N -> N+ P-",
+                "N -> P- N+",
+                "N+ -> N+ O",
+                "N+ -> O N+",
+                "N+ -> N +",
+                "N+ -> N+ +",
+                "N+ -> + N",
+                "N+ -> + N+",
+                "N- -> N- O",
+                "N- -> O N-",
+                "N- -> N -",
+                "N- -> N- -",
+                "N- -> - N",
+                "N- -> - N-",
+                "P -> P P",
+                "P -> O P",
+                "P -> P O",
+                "P -> D N",
+                "P -> N D",
+                "P -> P+ N",
+                "P -> N P+",
+                "P -> P N-",
+                "P -> N- P",
+                "P -> P+ N-",
+                "P -> N- P+",
+                "P+ -> P+ O",
+                "P+ -> O P+",
+                "P+ -> P +",
+                "P+ -> P+ +",
+                "P+ -> + P",
+                "P+ -> + P+",
+                "P- -> P- O",
+                "P- -> O P-",
+                "P- -> P -",
+                "P- -> P- -",
+                "P- -> - P",
+                "P- -> - P-",
+                "O -> O O",
+                "O -> I P",
+                "O -> P I",
+                "O -> I N",
+                "O -> N I"
+            ],
+            "pos_unary_rules": [
+                "N -> N",
+                "P -> P",
+                "D -> D",
+                "+ -> +",
+                "- -> -",
+                "I -> I",
+                "O -> D",
+                "O -> +",
+                "O -> -",
+                "O -> I",
+                "O -> O"
+            ]
+        }
+    },
+    "model": {
+        "model": {
+            "type": "transformer_doc_crfcfg_classifier",
+            "hparams": {
+                "n_nodes": 11,
+                "roots": [
+                    0,
+                    1,
+                    6
+                ],
+                "prenodes": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "posnodes": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ],
+                "rules": [
+                    [
+                        0,
+                        0,
+                        0
+                    ],
+                    [
+                        0,
+                        6,
+                        0
+                    ],
+                    [
+                        0,
+                        0,
+                        6
+                    ],
+                    [
+                        0,
+                        2,
+                        1
+                    ],
+                    [
+                        0,
+                        1,
+                        2
+                    ],
+                    [
+                        0,
+                        7,
+                        1
+                    ],
+                    [
+                        0,
+                        1,
+                        7
+                    ],
+                    [
+                        0,
+                        0,
+                        10
+                    ],
+                    [
+                        0,
+                        10,
+                        0
+                    ],
+                    [
+                        0,
+                        7,
+                        10
+                    ],
+                    [
+                        0,
+                        10,
+                        7
+                    ],
+                    [
+                        7,
+                        7,
+                        6
+                    ],
+                    [
+                        7,
+                        6,
+                        7
+                    ],
+                    [
+                        7,
+                        0,
+                        4
+                    ],
+                    [
+                        7,
+                        7,
+                        4
+                    ],
+                    [
+                        7,
+                        4,
+                        0
+                    ],
+                    [
+                        7,
+                        4,
+                        7
+                    ],
+                    [
+                        8,
+                        8,
+                        6
+                    ],
+                    [
+                        8,
+                        6,
+                        8
+                    ],
+                    [
+                        8,
+                        0,
+                        5
+                    ],
+                    [
+                        8,
+                        8,
+                        5
+                    ],
+                    [
+                        8,
+                        5,
+                        0
+                    ],
+                    [
+                        8,
+                        5,
+                        8
+                    ],
+                    [
+                        1,
+                        1,
+                        1
+                    ],
+                    [
+                        1,
+                        6,
+                        1
+                    ],
+                    [
+                        1,
+                        1,
+                        6
+                    ],
+                    [
+                        1,
+                        2,
+                        0
+                    ],
+                    [
+                        1,
+                        0,
+                        2
+                    ],
+                    [
+                        1,
+                        9,
+                        0
+                    ],
+                    [
+                        1,
+                        0,
+                        9
+                    ],
+                    [
+                        1,
+                        1,
+                        8
+                    ],
+                    [
+                        1,
+                        8,
+                        1
+                    ],
+                    [
+                        1,
+                        9,
+                        8
+                    ],
+                    [
+                        1,
+                        8,
+                        9
+                    ],
+                    [
+                        9,
+                        9,
+                        6
+                    ],
+                    [
+                        9,
+                        6,
+                        9
+                    ],
+                    [
+                        9,
+                        1,
+                        4
+                    ],
+                    [
+                        9,
+                        9,
+                        4
+                    ],
+                    [
+                        9,
+                        4,
+                        1
+                    ],
+                    [
+                        9,
+                        4,
+                        9
+                    ],
+                    [
+                        10,
+                        10,
+                        6
+                    ],
+                    [
+                        10,
+                        6,
+                        10
+                    ],
+                    [
+                        10,
+                        1,
+                        5
+                    ],
+                    [
+                        10,
+                        10,
+                        5
+                    ],
+                    [
+                        10,
+                        5,
+                        1
+                    ],
+                    [
+                        10,
+                        5,
+                        10
+                    ],
+                    [
+                        6,
+                        6,
+                        6
+                    ],
+                    [
+                        6,
+                        3,
+                        1
+                    ],
+                    [
+                        6,
+                        1,
+                        3
+                    ],
+                    [
+                        6,
+                        3,
+                        0
+                    ],
+                    [
+                        6,
+                        0,
+                        3
+                    ]
+                ],
+                "pos_unary_rules": [
+                    [
+                        0,
+                        0
+                    ],
+                    [
+                        1,
+                        1
+                    ],
+                    [
+                        2,
+                        2
+                    ],
+                    [
+                        4,
+                        4
+                    ],
+                    [
+                        5,
+                        5
+                    ],
+                    [
+                        3,
+                        3
+                    ],
+                    [
+                        6,
+                        2
+                    ],
+                    [
+                        6,
+                        4
+                    ],
+                    [
+                        6,
+                        5
+                    ],
+                    [
+                        6,
+                        3
+                    ],
+                    [
+                        6,
+                        6
+                    ]
+                ],
+                "pretrained_path": "bert-base-uncased",
+                "pooling_op": "mean",
+                "keep_seq_feats": false,
+                "hidden_drop_p": 0.2,
+                "subtoken_pooling_op": "mean",
+                "low_hidden_layer": 1,
+                "node_score_layers": null,
+                "has_rule_score": true,
+                "has_span_score": true,
+                "has_root_score": true,
+                "has_children_score": false,
+                "doc_labels": [
+                    0,
+                    1
+                ],
+                "aggregation_op": "sum",
+                "n_postags": 48
+            }
+        },
+        "optimizer": {
+            "momentum": 0.9,
+            "lr": 0.002,
+            "warmup_steps": 2100,
+            "max_steps": 21000,
+            "period": 4200,
+            "n_cycles": 5
+        },
+        "init_weights": false,
+        "loss": {
+            "label_loss": {
+                "be": true,
+                "coef": {
+                    "type": "constant",
+                    "start": 1.0
+                }
+            },
+            "label_seq_loss": {
+                "be": true,
+                "coef": {
+                    "type": "exponential_decay",
+                    "start": 1,
+                    "end": 1e-06
+                }
+            },
+            "unlabel_seq_loss": {
+                "be": false,
+                "th": 10.0,
+                "unlabel_word_possible_labels": [
+                    0,
+                    1,
+                    6
+                ],
+                "coef": {
+                    "type": "exponential_decay",
+                    "start": 1.0,
+                    "end": 1e-06
+                }
+            },
+            "syntax_loss": {
+                "be": true,
+                "coef": {
+                    "type": "exponential_decay",
+                    "start": 0.01,
+                    "end": 1e-06
+                }
+            }
+        }
+    },
+    "trainer": {
+        "gpus": 2,
+        "max_steps": 21000,
+        "val_check_interval": 1050,
+        "accumulate_grad_batches": 1
+    },
+    "version": 0
+}
