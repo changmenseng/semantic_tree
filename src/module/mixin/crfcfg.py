@@ -211,65 +211,28 @@ class CRFCFGMixin(nn.Module):
             rule_scores = self.rule_scores + (self.rule_mask - 1) * 1e10
             summed_scores += rule_scores[None, None, :, None, :, :]
 
-            # triu_pair_scores = []
-            # for row_id, col_id in zip(*triu_indices_): # has `max_len - i` items in the layer
-            #     triu_pair_scores_ = torch.stack([
-            #         inner_scores[:, row_id, col_id - i: col_id, :], # (batch_size, i, n_nodes)
-            #         inner_scores[:, row_id + 1: row_id + i + 1, col_id, :] # (batch_size, i, n_nodes)
-            #     ], 1) # (batch_size, 2, i, n_nodes)
-            #     triu_pair_scores.append(triu_pair_scores_)
-            # triu_pair_scores = torch.stack(triu_pair_scores, 1) # (batch_size, max_len - i, 2, i, n_nodes)
-            # triu_pair_scores = triu_pair_scores[:, :, 0, :, :].unsqueeze(-1) + triu_pair_scores[:, :, 1, :, :].unsqueeze(-2) # (batch_size, max_len - i, i, n_nodes, n_nodes)
             triu_pair_scores = get_triu_lr_scores(inner_scores, i, triu_left_indices, triu_right_indices)  # (batch_size, max_len-i, i, n_nodes) each
             triu_pair_scores = triu_pair_scores[0].unsqueeze(-1) + triu_pair_scores[1].unsqueeze(-2) # (batch_size, max_len - i, i, n_nodes, n_nodes)
 
             summed_scores += triu_pair_scores[:, :, None, :, :, :] # (batch_size, max_len - i, 1,              i, n_nodes, n_nodes)
 
             if compute_skeleton_logZ:
-                # skeleton_summed_scores = []
-                # for row_id, col_id in zip(*triu_indices_): # has `max_len - i` items in the layer
-                #     skeleton_summed_scores_ = torch.stack([
-                #         skeleton_inner_scores[:, row_id, col_id - i: col_id], # (batch_size, i)
-                #         skeleton_inner_scores[:, row_id + 1: row_id + i + 1, col_id] # (batch_size, i)
-                #     ], 1) # (batch_size, 2, i)
-                #     skeleton_summed_scores.append(skeleton_summed_scores_)
-                # skeleton_summed_scores = torch.stack(skeleton_summed_scores, 1) # (batch_size, max_len - i, 2, i)
-                # skeleton_summed_scores = skeleton_summed_scores.sum(2) # (batch_size, max_len - i, i)
                 skeleton_summed_scores = get_triu_lr_scores(skeleton_inner_scores[..., None], i, triu_left_indices, triu_right_indices) # (batch_size, max_len-i, i, 1) each
                 skeleton_summed_scores = (skeleton_summed_scores[0] + skeleton_summed_scores[1]).squeeze(-1)
 
 
             if self.has_root_score:
-                # triu_root_scores = []
-                # for row_id, col_id in zip(*triu_indices_):
-                #     triu_root_scores_ = node_scores[:, row_id, col_id, :] # (batch_size, n_nodes)
-                #     triu_root_scores.append(triu_root_scores_)
-                # triu_root_scores = torch.stack(triu_root_scores, 1) # (batch_size, max_len - i, n_nodes)
                 triu_root_scores = get_triu_scores(node_scores, triu_indices)
                 summed_scores += triu_root_scores[:, :, :, None, None, None] # (batch_size, max_len - i, n_nodes, 1, 1,              1)
 
             
             if self.has_children_score:
-                # triu_children_scores = []
-                # for row_id, col_id in zip(*triu_indices_):
-                #     triu_children_scores_ = torch.stack([
-                #         node_scores[:, row_id, col_id - i: col_id, :], # (batch_size, i, n_nodes)
-                #         node_scores[:, row_id + 1: row_id + i + 1, col_id, :] # (batch_size, i, n_nodes)
-                #     ], 1) # (batch_size, 2, i, n_nodes)
-                #     triu_children_scores.append(triu_children_scores_)
-                # triu_children_scores = torch.stack(triu_children_scores, 1) # (batch_size, max_len - i, 2, i, n_nodes)
-                # triu_children_scores = triu_children_scores[:, :, 0, :, :].unsqueeze(-1) + triu_children_scores[:, :, 1, :, :].unsqueeze(-2) # (batch_size, max_len - i, i, n_nodes, n_nodes)
                 triu_children_scores = get_triu_lr_scores(node_scores, i, triu_left_indices, triu_right_indices)
                 triu_children_scores = triu_children_scores[0].unsqueeze(-1) + triu_children_scores[1].unsqueeze(-2)
 
                 summed_scores += triu_children_scores[:, :, None, :, :, :]  # (batch_size, max_len - i, 1,              i, n_nodes, n_nodes)
             
             if self.has_span_score:
-                # triu_span_scores = []
-                # for row_id, col_id in zip(*triu_indices_):
-                #     triu_span_scores_ = span_scores[:, row_id, col_id][..., None] # (batch_size, 1)
-                #     triu_span_scores.append(triu_span_scores_)
-                # triu_span_scores = torch.stack(triu_span_scores, 1) # (batch_size, max_len - i, 1)
                 triu_span_scores = get_triu_scores(span_scores[..., None], triu_indices)
                 summed_scores += triu_span_scores[:, :, :, None, None, None]
                 if compute_skeleton_logZ:
@@ -414,68 +377,3 @@ class CRFCFGMixin(nn.Module):
             **kwargs))
 
         return outputs
-
-# class SimpleCRFCFGMixin(CRFCFGMixin):
-#     """
-#     A special case of CRFCFG that only word and sentence embeddings are used to compute.
-#     """
-    
-#     def __init__(
-#         self,
-#         hidden_dim: int,
-#         n_nodes: int,
-#         roots: Union[List[List[int]], str], # could be `all`
-#         prenodes: Union[List[List[int]], str], # could be `all`
-#         rules: Union[List[List[int]], str], # triple indicating head and two children,
-#         has_rule_score: Optional[bool] = True,
-#         contextual: Optional[bool] = False
-#     ):
-#         super().__init__(
-#             hidden_dim=hidden_dim,
-#             n_nodes=n_nodes,
-#             roots=roots,
-#             prenodes=prenodes,
-#             rules=rules,
-#             has_rule_score=has_rule_score,
-#             has_split_score=False,
-#             has_root_score=True,
-#             has_children_score=False)
-#         self.contextual = contextual
-    
-#     def get_scores(
-#         self,
-#         token_seqs: torch.LongTensor, # (batch_size, max_token_seq_len)
-# token_seq_masks: torch.LongTensor, # (batch_size, max_token_seq_len)
-#         pos_seqs: torch.LongTensor, # (batch_size, max_seq_len)
-#         seq_masks: torch.LongTensor, # (batch_size, max_seq_len)
-#         pos_seq_masks: torch.LongTensor, # (batch_size, max_seq_len)
-#         offsets: Optional[torch.LongTensor] = None,
-#         output_keys: Optional[set] = set(),
-#         **kwargs
-#     ):
-#         batch_size, max_len = pos_seqs.shape
-#         device = pos_seqs.device
-#         if self.contextual:
-#             required_key = 'seq_hiddens'
-#         else:
-#             required_key = 'seq_hiddens'
-#         outputs = super(CRFCFGMixin, self).forward(
-#             token_seqs=token_seqs, 
-#             pos_seqs=pos_seqs, 
-#             seq_masks=seq_masks,
-#             pos_seq_masks=pos_seq_masks,
-#             offsets=offsets,
-#             output_keys={required_key, 'seq_feats'} | output_keys,
-#             **kwargs)
-#         seq_node_scores = self.node_head(outputs[required_key]) # (batch_size, max_len, n_nodes)
-#         seq_node_scores = seq_node_scores + (self.prenode_mask.to(device)[None, None, :] - 1) * 1e10
-#         seq_root_scores = self.node_head(outputs['seq_feats'])[:, None, :] # (batch_size, 1, n_nodes)
-#         lens = seq_masks.sum(-1)[:, None, None].repeat(1, 1, self.n_nodes) # (batch_size, 1, n_nodes)
-#         seq_root_scores = torch.zeros_like(seq_node_scores).scatter(
-#             src=seq_root_scores, dim=1, index=lens - 1) # (batch_size, max_len, n_nodes)
-        
-#         node_scores = torch.zeros(batch_size, max_len, max_len, self.n_nodes, device=device)
-#         node_scores = triu_add(node_scores, seq_node_scores, 1) # (batch_size, max_len, max_len, n_nodes)
-#         node_scores[:, 0, ...] += seq_root_scores
-
-#         return node_scores, None, keep_keys(outputs, output_keys)
